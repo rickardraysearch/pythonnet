@@ -274,7 +274,6 @@ namespace Python.Runtime
 
             Error = new IntPtr(-1);
 
-#if PYTHON3
             IntPtr dllLocal = IntPtr.Zero;
             if (PythonDll != "__Internal")
             {
@@ -286,7 +285,6 @@ namespace Python.Runtime
             {
                 NativeMethods.FreeLibrary(dllLocal);
             }
-#endif
 #endif
 
             // Initialize modules that depend on the runtime class.
@@ -349,8 +347,8 @@ namespace Python.Runtime
 
 #if PYTHON3
         internal static IntPtr PyBytesType;
-        internal static IntPtr _PyObject_NextNotImplemented;
 #endif
+        internal static IntPtr _PyObject_NextNotImplemented;
 
         internal static IntPtr PyNotImplemented;
         internal const int Py_LT = 0;
@@ -1420,7 +1418,6 @@ namespace Python.Runtime
         [DllImport(PythonDll, CallingConvention = CallingConvention.Cdecl)]
         internal static extern int PyTuple_Size(IntPtr pointer);
 
-
         //====================================================================
         // Python iterator API
         //====================================================================
@@ -1428,18 +1425,18 @@ namespace Python.Runtime
 #if PYTHON2
         internal static bool PyIter_Check(IntPtr pointer)
         {
-            static int Py_TPFLAGS_HAVE_ITER = 1 << 7;
+            int Py_TPFLAGS_HAVE_ITER = 1 << 7;
             var ob_type = Marshal.ReadIntPtr(pointer, ObjectOffset.ob_type);
-            long tp_flags = = Marshal.ReadIntPtr(ob_type, TypeOffset.tp_flags);
+            long tp_flags = Marshal.ReadInt64(ob_type, TypeOffset.tp_flags);
             IntPtr tp_iternext = Marshal.ReadIntPtr(ob_type, TypeOffset.tp_iternext);
             return (tp_flags & Py_TPFLAGS_HAVE_ITER) != 0 && tp_iternext != null && tp_iternext != _PyObject_NextNotImplemented;
         }
 
         internal static bool PyObject_IsIterable(IntPtr pointer)
         {
-            static int Py_TPFLAGS_HAVE_ITER = 1 << 7;
+            int Py_TPFLAGS_HAVE_ITER = 1 << 7;
             var ob_type = Marshal.ReadIntPtr(pointer, ObjectOffset.ob_type);
-            long tp_flags = = Marshal.ReadIntPtr(ob_type, TypeOffset.tp_flags);
+            long tp_flags = Marshal.ReadInt64(ob_type, TypeOffset.tp_flags);
             IntPtr tp_iter = Marshal.ReadIntPtr(ob_type, TypeOffset.tp_iter);
             return (tp_flags & Py_TPFLAGS_HAVE_ITER) != 0 && tp_iter != null;
         }
