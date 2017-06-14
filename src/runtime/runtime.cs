@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Runtime.InteropServices;
 using System.Security;
 using System.Text;
@@ -278,7 +278,7 @@ namespace Python.Runtime
             IntPtr dllLocal = IntPtr.Zero;
             if (PythonDll != "__Internal")
             {
-                NativeMethods.LoadLibrary(PythonDll);
+                dllLocal = NativeMethods.LoadLibrary(PythonDll);
             }
             _PyObject_NextNotImplemented = NativeMethods.GetProcAddress(dllLocal, "_PyObject_NextNotImplemented");
 #if !(MONO_LINUX || MONO_OSX)
@@ -1426,14 +1426,36 @@ namespace Python.Runtime
         //====================================================================
 
 #if PYTHON2
-        [DllImport(PythonDll, CallingConvention = CallingConvention.Cdecl)]
-        internal static extern bool PyIter_Check(IntPtr pointer);
+        internal static bool PyIter_Check(IntPtr pointer)
+        {
+            static int Py_TPFLAGS_HAVE_ITER = 1 << 7;
+            var ob_type = Marshal.ReadIntPtr(pointer, ObjectOffset.ob_type);
+            long tp_flags = = Marshal.ReadIntPtr(ob_type, TypeOffset.tp_flags);
+            IntPtr tp_iternext = Marshal.ReadIntPtr(ob_type, TypeOffset.tp_iternext);
+            return (tp_flags & Py_TPFLAGS_HAVE_ITER) != 0 && tp_iternext != null && tp_iternext != _PyObject_NextNotImplemented;
+        }
+
+        internal static bool PyObject_IsIterable(IntPtr pointer)
+        {
+            static int Py_TPFLAGS_HAVE_ITER = 1 << 7;
+            var ob_type = Marshal.ReadIntPtr(pointer, ObjectOffset.ob_type);
+            long tp_flags = = Marshal.ReadIntPtr(ob_type, TypeOffset.tp_flags);
+            IntPtr tp_iter = Marshal.ReadIntPtr(ob_type, TypeOffset.tp_iter);
+            return (tp_flags & Py_TPFLAGS_HAVE_ITER) != 0 && tp_iter != null;
+        }
 #elif PYTHON3
         internal static bool PyIter_Check(IntPtr pointer)
         {
-            var ob_type = (IntPtr)Marshal.PtrToStructure(pointer + ObjectOffset.ob_type, typeof(IntPtr));
-            IntPtr tp_iternext = ob_type + TypeOffset.tp_iternext;
+            var ob_type = Marshal.ReadIntPtr(pointer, ObjectOffset.ob_type);
+            IntPtr tp_iternext = Marshal.ReadIntPtr(ob_type, TypeOffset.tp_iternext);
             return tp_iternext != null && tp_iternext != _PyObject_NextNotImplemented;
+        }
+
+        internal static bool PyObject_IsIterable(IntPtr pointer)
+        {
+            var ob_type = Marshal.ReadIntPtr(pointer, ObjectOffset.ob_type);
+            IntPtr tp_iter = Marshal.ReadIntPtr(ob_type, TypeOffset.tp_iter);
+            return tp_iter != null;
         }
 #endif
 
