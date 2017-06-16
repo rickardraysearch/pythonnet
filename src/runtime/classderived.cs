@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -831,6 +831,7 @@ namespace Python.Runtime
                 disposeList.Add(pynone);
 
                 // call __init__
+#if false
                 PyObject init = pyself.GetAttr("__init__", pynone);
                 disposeList.Add(init);
                 if (init.Handle != Runtime.PyNone)
@@ -849,6 +850,7 @@ namespace Python.Runtime
                         disposeList.Add(init.Invoke(pyargs));
                     }
                 }
+#endif
             }
             finally
             {

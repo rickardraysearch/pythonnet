@@ -84,9 +84,11 @@
     <Compile Include="pyimport.cs" />
     <Compile Include="pyinitialize.cs" />
     <Compile Include="pyrunstring.cs" />
+    <Compile Include="TestClrMethod.cs" />
     <Compile Include="TestConverter.cs" />
     <Compile Include="TestCustomMarshal.cs" />
     <Compile Include="TestExample.cs" />
+    <Compile Include="TestInit.cs" />
     <Compile Include="TestPyAnsiString.cs" />
     <Compile Include="TestPyFloat.cs" />
     <Compile Include="TestPyInt.cs" />

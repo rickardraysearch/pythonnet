@@ -1,10 +1,8 @@
-# -*- coding: utf-8 -*-
+﻿# -*- coding: utf-8 -*-
 
 """Test clrmethod and clrproperty support for calling methods and getting/setting python properties from CLR."""
 
-import Python.Test as Test
 import System
-import pytest
 import clr
 
 class ExampleClrClass(System.Object):

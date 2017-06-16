@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Runtime.InteropServices;
 
 namespace Python.Runtime
@@ -54,7 +54,7 @@ namespace Python.Runtime
 
             if (!(mt == PyCLRMetaType || mt == Runtime.PyTypeType))
             {
-                return Exceptions.RaiseTypeError("invalid metatype");
+                return Exceptions.RaiseTypeError($"invalid metatype {Runtime.PyObject_GetTypeName(mt)}");
             }
 
             // Ensure that the reflected type is appropriate for subclassing,
