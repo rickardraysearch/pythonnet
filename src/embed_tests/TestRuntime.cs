@@ -1,6 +1,7 @@
 ﻿using System;
 using NUnit.Framework;
 using Python.Runtime;
+using System.Linq;
 
 namespace Python.EmbeddingTest
 {
@@ -88,5 +89,35 @@ namespace Python.EmbeddingTest
 
             Runtime.Runtime.Py_Finalize();
         }
+
+        [Test]
+        public static void PyInit_Called_once() {
+			PythonEngine.Initialize();
+
+			var locals = new PyDict();
+
+
+				PythonEngine.Exec(@"
+import System
+calls = []
+
+class X(System.Object):
+    __namespace__ = ""PyTest""
+
+    def __init__(self, calls, *args):
+        print(args)
+        calls.append(args)
+
+x = X(calls, 1, 2)
+print(calls)
+", null, locals.Handle);
+            var calls = locals.GetItem("calls");
+            Assert.AreEqual(1, calls.Length());
+            Assert.AreEqual(2, calls[0].Length());
+			Assert.AreEqual(1, calls[0][0].As<int>());
+            Assert.AreEqual(2, calls[0][1].As<int>());
+            PythonEngine.Shutdown();
+
+		}
     }
 }

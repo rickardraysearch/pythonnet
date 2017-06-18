@@ -55,6 +55,50 @@ namespace Python.Runtime
             return Converter.ToPython(obj, cls.GetType());
         }
 
+        /// <summary>
+        /// Implements __init__ for derived classes of reflected classes.
+        /// </summary>
+        public new static int tp_init(IntPtr ob, IntPtr args, IntPtr kw)
+        {
+            var disposeList = new List<PyObject>();
+            try
+            {
+                var self = (CLRObject)GetManagedObject(ob);
+
+                // call __init__
+                using (var pyself = new PyObject(self.pyHandle))
+                using (var pynone = new PyObject(Runtime.PyNone))
+                {
+                    PyObject init = pyself.GetAttr("__init__", pynone);
+                    int pynargs = Runtime.PyTuple_Size(args);
+                    if (init.Handle != Runtime.PyNone)
+                    {
+                        // if __init__ hasn't been overridden then it will be a managed object
+                        ManagedType managedMethod = ManagedType.GetManagedObject(init.Handle);
+                        if (null == managedMethod)
+                        {
+                            var pyargs = new PyObject[pynargs];
+                            for (var i = 0; i < pynargs; ++i)
+                            {
+                                pyargs[i] = new PyObject(Runtime.PyTuple_GetItem(args, i));
+                            }
+
+                            disposeList.Add(init.Invoke(pyargs));
+                        }
+                    }
+                }
+
+                return 0;
+            }
+            finally
+            {
+                foreach (PyObject x in disposeList)
+                {
+                    x?.Dispose();
+                }
+            }
+        }
+
         public new static void tp_dealloc(IntPtr ob)
         {
             var self = (CLRObject)GetManagedObject(ob);
@@ -829,26 +873,6 @@ namespace Python.Runtime
                 Runtime.XIncref(Runtime.PyNone);
                 var pynone = new PyObject(Runtime.PyNone);
                 disposeList.Add(pynone);
-
-                // call __init__
-                PyObject init = pyself.GetAttr("__init__", pynone);
-                disposeList.Add(init);
-                if (init.Handle != Runtime.PyNone)
-                {
-                    // if __init__ hasn't been overridden then it will be a managed object
-                    ManagedType managedMethod = ManagedType.GetManagedObject(init.Handle);
-                    if (null == managedMethod)
-                    {
-                        var pyargs = new PyObject[args.Length];
-                        for (var i = 0; i < args.Length; ++i)
-                        {
-                            pyargs[i] = new PyObject(Converter.ToPython(args[i], args[i]?.GetType()));
-                            disposeList.Add(pyargs[i]);
-                        }
-
-                        disposeList.Add(init.Invoke(pyargs));
-                    }
-                }
             }
             finally
             {
